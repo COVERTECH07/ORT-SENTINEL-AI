@@ -1,0 +1,37 @@
+.live-alert {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  border-radius: 8px;
+  padding: 10px 40px 10px 12px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.live-alert > span {
+  display: grid;
+  place-items: center;
+}
+.live-alert > button {
+  position: absolute;
+  right: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+}
+.live-alert-high {
+  background: #fff0e8;
+  color: #ad5838;
+  border: 1px solid #f1d9cb;
+}
+.live-alert-low {
+  background: #edf6e9;
+  color: #488054;
+  border: 1px solid #dfead8;
+}

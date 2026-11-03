@@ -1,0 +1,4 @@
+# Optional YOLOv8 and prediction-model dependencies; defaults use local mock services.
+ultralytics>=8.3
+xgboost>=2.0
+prophet>=1.1

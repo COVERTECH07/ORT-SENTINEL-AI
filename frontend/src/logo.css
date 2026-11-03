@@ -1,0 +1,18 @@
+.brand-mark,
+.brand-light .brand-mark {
+  background: transparent;
+}
+
+.topbar-logo-mark {
+  display: block;
+  width: 29px;
+  height: 29px;
+  flex: none;
+}
+
+.auth-mobile-logo-mark {
+  display: block;
+  width: 31px;
+  height: 31px;
+  flex: none;
+}
