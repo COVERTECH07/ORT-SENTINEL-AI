@@ -1,111 +1,240 @@
-# ORT SENTINEL AI
+<div align="center">
 
-An intelligent resource-wastage analyser for campus canteens and hostels. ORT Sentinel tracks disposal events, classifies food, gives immediate feedback, rewards low-waste choices, visualizes campus impact, and forecasts cooking demand.
+<img src="frontend/public/ort-sentinel.svg" alt="ORT Sentinel AI logo" width="96" />
 
-## What’s included
+# ORT Sentinel AI
 
-- **FastAPI backend** with JWT access/refresh tokens, role-based access, SQLAlchemy, PostgreSQL and SQLite support, generated API docs, CSV export, and configurable sustainability factors.
-- **React + TypeScript frontend** with a responsive manager dashboard, student impact portal, real-time feed, demand predictions, and admin settings.
-- **Live updates** over authenticated WebSockets and an optional Redis cache/pub-sub integration.
-- **Food detection** via an inference-ready YOLO interface with a realistic mock detector for local use without model weights.
-- **Demand forecasting** with optional Prophet/XGBoost models and working seeded-data fallbacks.
-- **Hardware-ready interfaces** for MQTT and smart-bin waste events.
-- **Demo data** covering multiple campus users, meals, food types, and two weeks of waste activity.
+**An intelligent resource-wastage analyser for campus canteens and hostels.**
 
-## Run with Docker Compose
+Track disposal events, classify food, reward low-waste choices, visualise campus impact and forecast cooking demand, all in real time.
 
-Requirements: Docker Desktop / Docker Engine with Compose.
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React_18-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?logo=vercel&logoColor=white)
+![Render](https://img.shields.io/badge/Backend-Render-46E3B7?logo=render&logoColor=black)
 
-```powershell
-Copy-Item .env.example .env
-# Set POSTGRES_PASSWORD and JWT_SECRET_KEY in .env to strong, unique values.
+</div>
+
+---
+
+## Live Demo
+
+| Service | Platform | Link |
+|---|---|---|
+| Web app (dashboard and student portal) | Vercel | `<VERCEL_URL>` |
+| REST API | Render | https://ort-sentinel-ai.onrender.com |
+| Interactive API docs (Swagger) | Render | https://ort-sentinel-ai.onrender.com/docs |
+| Health check | Render | https://ort-sentinel-ai.onrender.com/health |
+
+> The backend runs on Render's free plan, so the first request after a period of inactivity can take a short while while the service wakes up.
+
+### Demo logins
+
+| Role | Email | Password |
+|---|---|---|
+| Admin | `admin@ort.edu` | `Admin123!` |
+| Manager | `manager@ort.edu` | `Manager123!` |
+| Student | `student1@ort.edu` | `Student123!` |
+
+These accounts are seeded for demonstration only. Disable seeding and rotate credentials for any real deployment.
+
+---
+
+## Why ORT Sentinel?
+
+Canteens and hostels throw away a lot of edible food, and nobody sees where or why. ORT Sentinel makes waste visible: every disposal is logged, scored and fed back to the student, while managers get dashboards and per-item forecasts to cook only what will be eaten.
+
+## Features
+
+- **Waste tracking:** record disposal events by user or RFID card, with grams, meal type and an optional image.
+- **Food detection:** YOLO-ready inference interface with a realistic mock detector, so everything runs without model weights.
+- **Rewards and leaderboard:** low-waste events earn points and unlock badges, and a campus leaderboard ranks the best savers.
+- **Manager dashboard:** campus metrics and charts, filterable by date range, meal type and user.
+- **Student impact portal:** personal score, badges, and money and CO₂ saved.
+- **Live updates:** authenticated WebSocket feed for waste events, high-waste alerts and score changes.
+- **Demand forecasting:** per-item recommended cooking quantities, with optional Prophet/XGBoost models and a deterministic fallback.
+- **Admin tools:** configurable sustainability factors and CSV export.
+- **Hardware-ready:** an event-ingestion endpoint and MQTT settings for smart bins.
+- **Secure by default:** JWT access and refresh tokens with role-based access control.
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS, Recharts, Axios, React Router |
+| Backend | FastAPI, Uvicorn, SQLAlchemy 2, Pydantic v2 |
+| Auth | JWT (python-jose), bcrypt (passlib) |
+| Database | PostgreSQL (deployment/Compose), SQLite (local development) |
+| Realtime | WebSockets, optional Redis cache and pub/sub |
+| ML (optional) | Ultralytics YOLOv8, Prophet, XGBoost |
+| Hardware | MQTT (paho-mqtt) |
+| DevOps | Docker, Docker Compose, Nginx, Vercel, Render |
+
+## Architecture
+
+```text
+ ┌──────────────┐   HTTPS / WebSocket   ┌─────────────────────────┐
+ │  React + Vite │ ────────────────────▶ │  FastAPI  (/api, /ws)   │
+ │   (Vercel)    │ ◀──────────────────── │        (Render)         │
+ └──────────────┘                        └───────┬─────────┬───────┘
+                                                 │         │
+                          ┌──────────────────────┘         └──────────────┐
+                          ▼                                               ▼
+                 PostgreSQL / SQLite                          Redis (optional) · MQTT (optional)
+                 users, waste events,                         cache, cross-worker pub/sub,
+                 badges, daily stats                          smart-bin events
+```
+
+## Project Structure
+
+```text
+.
+├── backend/              FastAPI app: routers, models, services, seed data
+│   ├── app/routers/      auth, users, waste, dashboard, predict, admin, hardware, live
+│   ├── app/services/     scoring, inference, prediction, broadcast, persistence
+│   ├── seed.py           idempotent demo data seeder
+│   └── requirements*.txt core and optional ML dependencies
+├── frontend/             React 18 + TypeScript + Vite application
+├── docker-compose.yml    PostgreSQL, Redis, backend and frontend
+└── .env.example          configuration template
+```
+
+---
+
+## Getting Started
+
+### Option 1: Docker Compose
+
+Requires Docker with Compose.
+
+```bash
+cp .env.example .env
+# Set POSTGRES_PASSWORD and JWT_SECRET_KEY to strong, unique values
 docker compose up --build
 ```
 
-Open the frontend at [http://localhost:8080](http://localhost:8080), the API at [http://localhost:8000](http://localhost:8000), and interactive API docs at [http://localhost:8000/docs](http://localhost:8000/docs).
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:8080 |
+| API | http://localhost:8000 |
+| API docs | http://localhost:8000/docs |
 
-The backend initializes the schema and seeds demo data on startup when `SEED_DEMO_DATA=true`. The demo login credentials are `admin@ort.edu` / `Admin123!`, `manager@ort.edu` / `Manager123!`, and `student1@ort.edu` / `Student123!`. Change these for any non-demo deployment.
+With `SEED_DEMO_DATA=true`, the backend creates the schema and seeds demo users and two weeks of events on startup.
 
-## Local development
+### Option 2: Local development
 
-### Backend
+**Backend** (Python 3.11+):
 
-Python 3.11+ is recommended. Local development defaults to SQLite and reuses `backend/ort_sentinel_fallback.db`; PostgreSQL remains the Compose/deployment database. The root `.env` is loaded regardless of the backend command's working directory. Redis is optional.
-
-```powershell
-Set-Location 'C:\Users\Tashu Bajpai\OneDrive\Desktop\ORT AI'
-if (-not (Test-Path .env)) { Copy-Item .env.example .env }
-Set-Location .\backend
-if (-not (Test-Path .\.venv\Scripts\python.exe)) { python -m venv .venv }
-& .\.venv\Scripts\python.exe -m pip install -r requirements.txt
-$env:DATABASE_URL = "sqlite:///./ort_sentinel_fallback.db"
-$env:JWT_SECRET_KEY = "local-development-only-change-this-secret"
-& .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```bash
+cp .env.example .env
+cd backend
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+export JWT_SECRET_KEY="local-development-only-change-this-secret"
+python seed.py
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-### Frontend
+Local runs use SQLite by default (`backend/ort_sentinel_fallback.db`). Redis is optional.
 
-In another terminal:
+**Frontend** (in a second terminal):
 
-```powershell
-Set-Location 'C:\Users\Tashu Bajpai\OneDrive\Desktop\ORT AI\frontend'
+```bash
+cd frontend
 npm install
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Vite proxies `/api` (including WebSocket connections) to `http://127.0.0.1:8000`, matching the backend bind address and avoiding IPv6 `localhost` resolution issues. Set `VITE_API_URL` only when your API is hosted at a different origin.
+Vite proxies `/api`, including WebSockets, to `http://127.0.0.1:8000`. Set `VITE_API_URL` only if the API lives on a different origin.
+
+Optional ML packages (YOLOv8, Prophet, XGBoost):
+
+```bash
+pip install -r backend/requirements-ml.txt
+```
+
+---
 
 ## Configuration
 
-Copy `.env.example` to `.env`. The compose stack passes these settings to the backend:
+Copy `.env.example` to `.env`.
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `DATABASE_URL` | SQLAlchemy URL; PostgreSQL in Compose, SQLite is supported locally | Compose PostgreSQL |
-| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | PostgreSQL credentials | `ort_sentinel`, `ort`, local-only password |
-| `JWT_SECRET_KEY` | Signing key for access and refresh tokens | Set a strong secret |
+| `DATABASE_URL` | SQLAlchemy URL (PostgreSQL or SQLite) | SQLite locally, PostgreSQL in Compose |
+| `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` | PostgreSQL credentials | `ort_sentinel`, `ort`, set your own |
+| `JWT_SECRET_KEY` | Signing key for access and refresh tokens | **set a strong secret** |
 | `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | Access token lifetime | `30` |
 | `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | Refresh token lifetime | `14` |
 | `WASTE_THRESHOLD_GRAMS` | High-waste alert threshold | `100` |
-| `MONEY_PER_KG` | Estimated rupees saved per kilogram | `50` |
-| `CO2_PER_KG` | Estimated CO₂ kilograms avoided per kilogram saved | `2.5` |
-| `CORS_ORIGINS` | Comma-separated allowed browser origins | Local Vite and Compose URLs |
-| `SEED_DEMO_DATA` | Seed representative users and two weeks of events | `true` |
-| `REDIS_URL` | Optional cache / cross-worker event pub-sub | Compose Redis |
-| `MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPIC` | Optional hardware broker and waste topic | Disabled |
+| `MONEY_PER_KG` | Estimated rupees saved per kg | `50` |
+| `CO2_PER_KG` | Estimated kg CO₂ avoided per kg saved | `2.5` |
+| `CORS_ORIGINS` | Comma-separated allowed browser origins | local Vite and Compose URLs |
+| `SEED_DEMO_DATA` | Seed demo users and events on startup | `true` |
+| `REDIS_URL` | Optional cache and pub/sub | disabled locally |
+| `MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPIC` | Optional smart-bin broker | disabled |
 
-Never use demo credentials, example secrets, or the Compose fallback password in a public deployment. Configure TLS at the deployment ingress and restrict CORS origins.
+---
 
-## API overview
+## Deployment
 
-All REST endpoints are prefixed with `/api`.
+The live demo is split across two platforms.
+
+**Backend on Render** (web service)
+
+| Setting | Value |
+|---|---|
+| Root directory | `backend` |
+| Build command | `pip install -r requirements.txt` |
+| Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| Auto-deploy | on commits to `main` |
+
+Set `JWT_SECRET_KEY` and `DATABASE_URL`, and add your frontend origin to `CORS_ORIGINS`.
+
+**Frontend on Vercel**
+
+- Framework preset: Vite, root directory `frontend`, build command `npm run build`, output directory `dist`.
+- Set `VITE_API_URL` to the Render API base, for example `https://ort-sentinel-ai.onrender.com/api`.
+
+Before going public: disable demo seeding, rotate secrets and passwords, serve over TLS and restrict CORS to your real origins.
+
+---
+
+## API Overview
+
+All REST endpoints are prefixed with `/api`. Full details are in the Swagger UI at `/docs`.
 
 | Route | Purpose |
 |---|---|
-| `POST /api/auth/register`, `POST /api/auth/login` | Create account and issue access/refresh tokens |
-| `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` | Refresh, revoke, and inspect authentication |
+| `POST /api/auth/register`, `POST /api/auth/login` | Create an account and issue tokens |
+| `POST /api/auth/refresh`, `POST /api/auth/logout`, `GET /api/auth/me` | Refresh, revoke and inspect authentication |
 | `GET /api/users/me`, `GET /api/users/`, `GET/PATCH /api/users/{id}` | Profile and role-aware user management |
-| `POST/GET /api/waste/` | Record waste (user or RFID, grams, meal, optional image) and query history |
-| `GET /api/dashboard/stats`, `GET /api/dashboard/charts` | Campus metrics and chart series; filter by `start_date`, `end_date`, `meal_type`, and `user_id` |
+| `POST/GET /api/waste/` | Record waste and query history |
+| `GET /api/dashboard/stats`, `GET /api/dashboard/charts` | Campus metrics and chart series |
 | `GET /api/dashboard/leaderboard` | Campus saver ranking |
-| `GET /api/predict/?date=YYYY-MM-DD&meal_type=lunch` | Per-item recommended cooking quantities |
+| `GET /api/predict/?date=YYYY-MM-DD&meal_type=lunch` | Recommended cooking quantities per item |
 | `GET/PUT /api/admin/config`, `GET /api/admin/export.csv` | Admin configuration and CSV export |
-| `WS /api/ws/live` | Live waste events, alerts, and score updates |
+| `WS /api/ws/live` | Live events, alerts and score updates |
 | `POST /api/hardware/events` | Hardware / MQTT-ready waste event ingestion |
+| `GET /health` | Service health check |
 
-The OpenAPI schema and “Try it out” UI are available at `/docs`; the raw schema is at `/openapi.json`.
+## How scoring works
 
-## Waste scoring and detections
+Disposal events above `WASTE_THRESHOLD_GRAMS` are flagged as `high_waste`. Every other event earns points and can unlock badges. Savings are estimated with `MONEY_PER_KG` and `CO2_PER_KG`, and both are configurable from the admin settings.
 
-Disposal events above the configured threshold are marked `high_waste`; other events earn points and can unlock badges. The mock food detector returns plausible Indian canteen items and confidence scores without downloading model weights. The inference endpoint is ready to be replaced with a deployed YOLOv8 model; optional Ultralytics, Prophet, and XGBoost packages are listed in `backend/requirements-ml.txt`. Seeded historical records ensure predictions remain available using the built-in fallback.
+## Roadmap
 
-The initial demo admin is intentionally convenient for local exploration only. Disable demo seeding, rotate credentials and signing secrets, configure real infrastructure, and review access policies before production use.
+- Deploy a trained YOLOv8 food-detection model in place of the mock detector.
+- Connect real smart-bin hardware through MQTT.
+- Add automated tests and CI.
 
-## Project layout
+---
 
-```text
-backend/             FastAPI application, models, services, seed data, tests
-frontend/            React 18 + TypeScript + Vite application
-docker-compose.yml   PostgreSQL, Redis, backend, and frontend
-.env.example         Local configuration template
-```
+<div align="center">
+
+Built to cut campus food waste. If this project helps you, consider giving it a star.
+
+</div>
