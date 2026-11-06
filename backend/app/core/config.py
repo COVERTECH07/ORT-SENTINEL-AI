@@ -28,8 +28,11 @@ class Settings(BaseSettings):
         validation_alias="DATABASE_URL",
     )
     database_connect_timeout_seconds: int = Field(default=5, ge=1, le=60)
-    cors_origins: str = "http://localhost:3000,http://localhost:5173"
-    seed_demo_data: bool = Field(default=False, validation_alias="SEED_DEMO_DATA")
+    cors_origins: str = (
+        "http://localhost:3000,http://localhost:5173,http://localhost:8080,"
+        "https://ort-sentinel-ai.vercel.app,https://*.vercel.app"
+    )
+    seed_demo_data: bool = Field(default=True, validation_alias="SEED_DEMO_DATA")
     waste_threshold_grams: float = Field(default=100.0, validation_alias="WASTE_THRESHOLD_GRAMS")
     money_per_kg: float = Field(default=50.0, validation_alias="MONEY_PER_KG")
     co2_per_kg: float = Field(default=2.5, validation_alias="CO2_PER_KG")
