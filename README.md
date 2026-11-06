@@ -24,14 +24,14 @@ Track disposal events, classify food, reward low-waste choices, visualise campus
 
 | Service | Platform | Link |
 |---|---|---|
-| Web app (dashboard and student portal) | Vercel | `<VERCEL_URL>` |
+| Web app (dashboard + student portal) | Vercel | https://ort-sentinel-ai.vercel.app |
 | REST API | Render | https://ort-sentinel-ai.onrender.com |
 | Interactive API docs (Swagger) | Render | https://ort-sentinel-ai.onrender.com/docs |
 | Health check | Render | https://ort-sentinel-ai.onrender.com/health |
 
-> The backend runs on Render's free plan, so the first request after a period of inactivity can take a short while while the service wakes up.
+> The backend runs on Render's free plan. The first request after inactivity can take 30–60 seconds while the service wakes up.
 
-### Demo logins
+### Demo logins (always work after backend wakes)
 
 | Role | Email | Password |
 |---|---|---|
@@ -39,7 +39,19 @@ Track disposal events, classify food, reward low-waste choices, visualise campus
 | Manager | `manager@ort.edu` | `Manager123!` |
 | Student | `student1@ort.edu` | `Student123!` |
 
-These accounts are seeded for demonstration only. Disable seeding and rotate credentials for any real deployment.
+These accounts are seeded automatically. Disable seeding and rotate credentials for any real deployment.
+
+---
+
+## Project phases (matches PPT + Q&A guide)
+
+| Phase | Scope | Status in this repo |
+|---|---|---|
+| **Phase 1** | Weight + RFID tracking, alerts, rewards, Waste Score, live dashboard | **Complete** (software fully ready) |
+| **Phase 2** | Vision AI (YOLOv8 food recognition) + demand prediction (XGBoost/Prophet) | **Complete** (mock detector + real forecasting pipeline ready; swap in trained weights later) |
+| **Phase 3** | Mobile app, multi-bin, water/electricity, full edge hardware | Planned (hardware-ready endpoints + MQTT already present) |
+
+Software (web app + API) is production-ready for Phase 1 & 2 demos. Hardware (ESP32 + sensors) is the next step.
 
 ---
 
@@ -50,15 +62,15 @@ Canteens and hostels throw away a lot of edible food, and nobody sees where or w
 ## Features
 
 - **Waste tracking:** record disposal events by user or RFID card, with grams, meal type and an optional image.
-- **Food detection:** YOLO-ready inference interface with a realistic mock detector, so everything runs without model weights.
-- **Rewards and leaderboard:** low-waste events earn points and unlock badges, and a campus leaderboard ranks the best savers.
+- **Food detection:** YOLO-ready inference interface with a realistic deterministic mock detector (works without model weights).
+- **Rewards and leaderboard:** low-waste events earn points and unlock badges; campus leaderboard ranks the best savers.
 - **Manager dashboard:** campus metrics and charts, filterable by date range, meal type and user.
-- **Student impact portal:** personal score, badges, and money and CO₂ saved.
+- **Student impact portal:** personal score, badges, money and CO₂ saved.
 - **Live updates:** authenticated WebSocket feed for waste events, high-waste alerts and score changes.
-- **Demand forecasting:** per-item recommended cooking quantities, with optional Prophet/XGBoost models and a deterministic fallback.
-- **Admin tools:** configurable sustainability factors and CSV export.
-- **Hardware-ready:** an event-ingestion endpoint and MQTT settings for smart bins.
-- **Secure by default:** JWT access and refresh tokens with role-based access control.
+- **Demand forecasting:** per-item recommended cooking quantities (Prophet/XGBoost optional + deterministic fallback).
+- **Admin tools:** configurable sustainability factors (money/kg, CO₂/kg, threshold) and CSV export.
+- **Hardware-ready:** event-ingestion endpoint + MQTT settings for smart bins.
+- **Secure by default:** JWT access + refresh tokens with role-based access control.
 
 ## Tech Stack
 
@@ -122,7 +134,7 @@ docker compose up --build
 | API | http://localhost:8000 |
 | API docs | http://localhost:8000/docs |
 
-With `SEED_DEMO_DATA=true`, the backend creates the schema and seeds demo users and two weeks of events on startup.
+With `SEED_DEMO_DATA=true` (default), the backend creates the schema and seeds demo users + two weeks of events on startup.
 
 ### Option 2: Local development
 
@@ -148,7 +160,7 @@ npm install
 npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-Vite proxies `/api`, including WebSockets, to `http://127.0.0.1:8000`. Set `VITE_API_URL` only if the API lives on a different origin.
+Vite proxies `/api` (including WebSockets) to `http://127.0.0.1:8000`. Set `VITE_API_URL` only if the API lives on a different origin.
 
 Optional ML packages (YOLOv8, Prophet, XGBoost):
 
@@ -172,7 +184,7 @@ Copy `.env.example` to `.env`.
 | `WASTE_THRESHOLD_GRAMS` | High-waste alert threshold | `100` |
 | `MONEY_PER_KG` | Estimated rupees saved per kg | `50` |
 | `CO2_PER_KG` | Estimated kg CO₂ avoided per kg saved | `2.5` |
-| `CORS_ORIGINS` | Comma-separated allowed browser origins | local Vite and Compose URLs |
+| `CORS_ORIGINS` | Comma-separated allowed browser origins | local + Vercel |
 | `SEED_DEMO_DATA` | Seed demo users and events on startup | `true` |
 | `REDIS_URL` | Optional cache and pub/sub | disabled locally |
 | `MQTT_BROKER`, `MQTT_PORT`, `MQTT_TOPIC` | Optional smart-bin broker | disabled |
@@ -192,12 +204,12 @@ The live demo is split across two platforms.
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
 | Auto-deploy | on commits to `main` |
 
-Set `JWT_SECRET_KEY` and `DATABASE_URL`, and add your frontend origin to `CORS_ORIGINS`.
+Set `JWT_SECRET_KEY`, `DATABASE_URL`, and ensure `CORS_ORIGINS` includes your frontend origin.
 
 **Frontend on Vercel**
 
 - Framework preset: Vite, root directory `frontend`, build command `npm run build`, output directory `dist`.
-- Set `VITE_API_URL` to the Render API base, for example `https://ort-sentinel-ai.onrender.com/api`.
+- Set `VITE_API_URL` to `https://ort-sentinel-ai.onrender.com/api`.
 
 Before going public: disable demo seeding, rotate secrets and passwords, serve over TLS and restrict CORS to your real origins.
 
@@ -225,11 +237,12 @@ All REST endpoints are prefixed with `/api`. Full details are in the Swagger UI 
 
 Disposal events above `WASTE_THRESHOLD_GRAMS` are flagged as `high_waste`. Every other event earns points and can unlock badges. Savings are estimated with `MONEY_PER_KG` and `CO2_PER_KG`, and both are configurable from the admin settings.
 
-## Roadmap
+## Roadmap (next after software)
 
-- Deploy a trained YOLOv8 food-detection model in place of the mock detector.
-- Connect real smart-bin hardware through MQTT.
-- Add automated tests and CI.
+1. Train & deploy real YOLOv8 food-detection weights (replace mock).
+2. Connect real smart-bin hardware (ESP32 + load cell + RFID + camera) via MQTT / `/api/hardware/events`.
+3. Multi-bin support + mobile app (Phase 3).
+4. Automated tests + CI.
 
 ---
 
