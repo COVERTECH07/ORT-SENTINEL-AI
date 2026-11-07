@@ -46,6 +46,9 @@ async def hardware_event(
         }
         if owner:
             record_weight(owner, weight_grams)
+        # Prefer camera frame for YOLOv8; fall back to device_id seed for mock
+        plate_image = event.image or event.image_base64 or event.image_url or event.device_id
+        food_items = detect_food_items(plate_image, event.meal_type)
         entry = WasteEntry(
             user_id=owner.id if owner else None,
             amount_kg=weight_grams / 1000,
@@ -53,7 +56,8 @@ async def hardware_event(
             meal_type=event.meal_type.strip().lower(),
             category=event.category.strip().lower(),
             notes=f"Hardware event {event.device_id or 'unknown device'}",
-            food_items=detect_food_items(event.device_id, event.meal_type),
+            food_items=food_items,
+            image_url=event.image_url,
             status=str(reward["status"]),
             points_awarded=int(reward["points_awarded"]),
             points_delta=int(reward["points_delta"]),
@@ -82,6 +86,7 @@ async def hardware_event(
         threshold_exceeded = entry.status == "high_waste"
     else:
         payload_user = None
+        entry = None
     payload = {
         "type": f"hardware.{event.event_type}",
         "user_id": payload_user.id if payload_user else None,
@@ -93,7 +98,7 @@ async def hardware_event(
         "weight_grams": weight_grams,
         "timestamp": (event.timestamp or datetime.now(timezone.utc)).isoformat(),
     }
-    if entry_data:
+    if entry_data and entry is not None:
         payload["food_items"] = entry_data["food_items"]
         payload["meal_type"] = entry_data["meal_type"]
         payload["status"] = entry_data["status"]
