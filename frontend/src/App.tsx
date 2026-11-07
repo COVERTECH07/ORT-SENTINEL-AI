@@ -1,15 +1,10 @@
-import { FormEvent, ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { Link, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import {
-  Activity, ArrowDownRight, ArrowUpRight, Award, Bell, ChefHat, ChevronDown, CircleHelp,
-  Clock3, Download, Flame, Leaf, LayoutDashboard, LogOut, Menu, Moon, Search, Settings2, ShieldCheck,
-  Sparkles, Sun, TrendingUp, Users, Utensils, X,
+  Activity, Bell, ChefHat, ChevronDown, Flame, LayoutDashboard, Leaf, LogOut, Menu, Moon,
+  ScanSearch, Settings2, Sparkles, Sun, Utensils, X,
 } from "lucide-react";
-import {
-  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer,
-  Tooltip, XAxis, YAxis,
-} from "recharts";
-import api, { getError, User, WasteEvent } from "./api";
+import api, { User } from "./api";
 import SentinelLogo from "./components/SentinelLogo";
 import { AuthPage } from "./pages/AuthPage";
 import { Dashboard } from "./pages/Dashboard";
@@ -17,25 +12,10 @@ import { StudentPortal } from "./pages/StudentPortal";
 import { LiveFeed } from "./pages/LiveFeed";
 import { Predictions } from "./pages/Predictions";
 import { AdminSettings } from "./pages/AdminSettings";
+import { FoodDetect } from "./pages/FoodDetect";
 
 type JsonRecord = Record<string, unknown>;
 const asNumber = (value: unknown) => Number(value ?? 0);
-const asArray = <T,>(value: unknown): T[] => Array.isArray(value) ? value as T[] : [];
-const itemLabel = (item: WasteEvent["food_items"][number]) => typeof item === "string" ? item : item.name;
-const humanMeal = (meal: string) => meal.charAt(0).toUpperCase() + meal.slice(1);
-const dateLabel = (value: string) => new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-const toDateInput = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-async function downloadCsv() {
-  const { data } = await api.get("/admin/export.csv", { responseType: "blob" });
-  const url = URL.createObjectURL(data);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `ort-waste-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.append(link);
-  link.click();
-  link.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -146,6 +126,7 @@ function App() {
                 <Route path="student" element={<StudentPortal user={user} />} />
                 <Route path="live-feed" element={<LiveFeed />} />
                 <Route path="predictions" element={<Predictions />} />
+                <Route path="detect" element={<FoodDetect />} />
                 <Route path="admin" element={user.role === "admin" ? <AdminSettings /> : <Navigate to="/" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
@@ -160,6 +141,7 @@ function App() {
 function pageTitle(path: string) {
   if (path.includes("live-feed")) return "Live feed";
   if (path.includes("predictions")) return "Demand forecast";
+  if (path.includes("detect")) return "Food detect";
   if (path.includes("admin")) return "Settings";
   if (path.includes("student")) return "My impact";
   return "Overview";
@@ -186,8 +168,19 @@ function CampusSwitcher() {
 function Sidebar({ user, logout, open, close }: { user: User; logout: () => void; open: boolean; close: () => void }) {
   const isStudent = user.role === "student";
   const links = isStudent
-    ? [{ to: "/student", label: "My impact", icon: LayoutDashboard }, { to: "/live-feed", label: "Live feed", icon: Activity }, { to: "/predictions", label: "Predictions", icon: ChefHat }]
-    : [{ to: "/", label: "Overview", icon: LayoutDashboard }, { to: "/live-feed", label: "Live feed", icon: Activity }, { to: "/predictions", label: "Predictions", icon: ChefHat }, ...(user.role === "admin" ? [{ to: "/admin", label: "Settings", icon: Settings2 }] : [])];
+    ? [
+        { to: "/student", label: "My impact", icon: LayoutDashboard },
+        { to: "/live-feed", label: "Live feed", icon: Activity },
+        { to: "/detect", label: "Food detect", icon: ScanSearch },
+        { to: "/predictions", label: "Predictions", icon: ChefHat },
+      ]
+    : [
+        { to: "/", label: "Overview", icon: LayoutDashboard },
+        { to: "/live-feed", label: "Live feed", icon: Activity },
+        { to: "/detect", label: "Food detect", icon: ScanSearch },
+        { to: "/predictions", label: "Predictions", icon: ChefHat },
+        ...(user.role === "admin" ? [{ to: "/admin", label: "Settings", icon: Settings2 }] : []),
+      ];
   return <>
     {open && <button className="scrim" aria-label="Close navigation" onClick={close} />}
     <aside className={`sidebar ${open ? "sidebar-open" : ""}`}>
