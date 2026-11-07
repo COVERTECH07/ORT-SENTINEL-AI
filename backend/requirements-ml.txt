@@ -1,4 +1,14 @@
-# Optional YOLOv8 and prediction-model dependencies; defaults use local mock services.
+# Optional ML stack for ORT Sentinel AI (install on GPU/CPU host when ready for real models)
+# Core API still runs without these — mock YOLOv8 + historical forecast are the defaults.
+#
+#   pip install -r requirements.txt
+#   pip install -r requirements-ml.txt
+#
 ultralytics>=8.3
 xgboost>=2.0
 prophet>=1.1
+pandas>=2.0
+numpy>=1.24
+opencv-python-headless>=4.8
+pillow>=10.0
+scikit-learn>=1.3

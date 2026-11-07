@@ -160,3 +160,7 @@ class HardwareEvent(BaseModel):
     device_id: str | None = Field(default=None, max_length=100)
     timestamp: datetime | None = None
     data: dict[str, Any] = Field(default_factory=dict)
+    # Camera / YOLOv8 plate photo (base64, data-URL, or URL)
+    image: str | None = Field(default=None, max_length=5_000_000)
+    image_base64: str | None = Field(default=None, max_length=5_000_000)
+    image_url: str | None = Field(default=None, max_length=2048)
