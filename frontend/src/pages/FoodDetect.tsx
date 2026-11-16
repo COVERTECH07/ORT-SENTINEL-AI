@@ -111,7 +111,7 @@ export function FoodDetect() {
         </div>
       )}
 
-      <section className="chart-grid" style={{ gridTemplateColumns: "minmax(0, 1.2fr) minmax(280px, 1fr)" }}>
+      <section className="chart-grid detect-grid">
         <article className="panel">
           <div className="panel-heading">
             <div>
@@ -127,33 +127,22 @@ export function FoodDetect() {
             </select>
           </div>
 
-          <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-            <div
-              style={{
-                border: "1px dashed #c5d0c3",
-                borderRadius: 12,
-                minHeight: 260,
-                background: "#f4f7f2",
-                display: "grid",
-                placeItems: "center",
-                overflow: "hidden",
-                position: "relative",
-              }}
-            >
+          <div className="detect-body">
+            <div className="detect-dropzone">
               {cameraOn ? (
-                <video ref={videoRef} playsInline muted style={{ width: "100%", maxHeight: 320, objectFit: "cover" }} />
+                <video ref={videoRef} playsInline muted className="detect-media" />
               ) : preview ? (
-                <img src={preview} alt="Plate preview" style={{ width: "100%", maxHeight: 320, objectFit: "contain" }} />
+                <img src={preview} alt="Plate preview" className="detect-media" />
               ) : (
-                <div style={{ textAlign: "center", color: "#7a8a78", padding: 24 }}>
-                  <ImagePlus size={28} style={{ margin: "0 auto 8px" }} />
-                  <div style={{ fontSize: 12 }}>No image yet</div>
-                  <div style={{ fontSize: 10, marginTop: 4 }}>Open camera or upload a plate photo</div>
+                <div className="detect-placeholder">
+                  <ImagePlus size={28} />
+                  <div className="detect-placeholder-title">No image yet</div>
+                  <div className="detect-placeholder-sub">Open camera or upload a plate photo</div>
                 </div>
               )}
             </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            <div className="detect-actions">
               {!cameraOn ? (
                 <button className="button button-outline" type="button" onClick={() => void startCamera()}>
                   <Camera size={15} /> Open camera
@@ -183,7 +172,7 @@ export function FoodDetect() {
                 <ScanSearch size={15} /> {loading ? "Detecting…" : base64 ? "Detect food" : "Run demo detect"}
               </button>
             </div>
-            <p style={{ margin: 0, fontSize: 10, color: "#8a9585" }}>
+            <p className="detect-hint">
               Without a photo, <b>Run demo detect</b> still calls the API with a mock seed so you can verify the pipeline.
             </p>
           </div>
@@ -197,26 +186,24 @@ export function FoodDetect() {
             </div>
           </div>
           {!result && !loading && (
-            <div className="empty-state" style={{ minHeight: 200 }}>
+            <div className="empty-state detect-empty">
               <Sparkles size={22} />
               <p>Results appear here after detect</p>
               <small>YOLOv8 live weights or professional mock</small>
             </div>
           )}
           {loading && (
-            <div className="empty-state" style={{ minHeight: 200 }}>
+            <div className="empty-state detect-empty">
               <p>Running inference…</p>
             </div>
           )}
           {result && (
-            <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
-              <div style={{ fontSize: 11, color: "#6b7a6c" }}>
+            <div className="detect-results">
+              <div className="detect-model-line">
                 Model: <b>{result.model ?? "—"}</b>
                 {result.inference_mode ? ` · mode: ${result.inference_mode}` : ""}
               </div>
-              {result.note && (
-                <div style={{ fontSize: 10, color: "#8a9585", lineHeight: 1.45 }}>{result.note}</div>
-              )}
+              {result.note && <div className="detect-note">{result.note}</div>}
               {items.length === 0 ? (
                 <div className="empty-inline">No food items returned</div>
               ) : (
@@ -224,22 +211,9 @@ export function FoodDetect() {
                   const name = item.name || item.class || "Item";
                   const conf = typeof item.confidence === "number" ? item.confidence : 0;
                   return (
-                    <div
-                      key={`${name}-${index}`}
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        padding: "10px 12px",
-                        borderRadius: 8,
-                        border: "1px solid #e8ebe5",
-                        background: "#fafbf8",
-                      }}
-                    >
-                      <b style={{ fontSize: 12 }}>{name}</b>
-                      <span style={{ fontSize: 11, color: "#4b9661", fontWeight: 600 }}>
-                        {(conf * 100).toFixed(1)}%
-                      </span>
+                    <div key={`${name}-${index}`} className="detect-result-row">
+                      <b>{name}</b>
+                      <span>{(conf * 100).toFixed(1)}%</span>
                     </div>
                   );
                 })
