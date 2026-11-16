@@ -84,10 +84,6 @@ def dashboard_stats(
         WasteEntry.created_at < range_start,
     )
     today_grams = sum_grams(WasteEntry.created_at >= today_start)
-    yesterday_grams = sum_grams(
-        WasteEntry.created_at >= yesterday_start,
-        WasteEntry.created_at < today_start,
-    )
     filtered_saved = float(db.scalar(
         select(func.coalesce(func.sum(WasteEntry.saved_grams), 0)).where(*range_filters)
     ) or 0)
@@ -143,6 +139,36 @@ def dashboard_stats(
         "rank": rank,
         "badges": user.badges or [] if user.role == "student" else [],
     }
+
+
+@router.get("/student-stats")
+def student_stats(db: DbDep, user: CurrentUser):
+    """Student portal summary — same core as /stats scoped to the logged-in student."""
+    base = dashboard_stats(db=db, user=user, start_date=None, end_date=None, meal_type=None, user_id=None)
+    # Streak: consecutive days with at least one low_waste entry (simple approx)
+    streak_days = 0
+    if user.role == "student":
+        today = datetime.now(timezone.utc).date()
+        for offset in range(0, 30):
+            day = today - timedelta(days=offset)
+            day_start = datetime.combine(day, time.min, tzinfo=timezone.utc)
+            day_end = day_start + timedelta(days=1)
+            count = db.scalar(
+                select(func.count(WasteEntry.id)).where(
+                    WasteEntry.user_id == user.id,
+                    WasteEntry.status == "low_waste",
+                    WasteEntry.created_at >= day_start,
+                    WasteEntry.created_at < day_end,
+                )
+            ) or 0
+            if count > 0:
+                streak_days += 1
+            elif offset > 0:
+                break
+    base["streak_days"] = streak_days
+    base["waste_score"] = int(user.waste_score or 0)
+    base["total_points"] = int(user.total_points or 0)
+    return base
 
 
 @router.get("/charts")
