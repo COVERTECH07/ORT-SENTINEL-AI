@@ -6,6 +6,7 @@ import "./styles.css";
 import "./live-alert.css";
 import "./dashboard-filters.css";
 import "./logo.css";
+import "./detect.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
